@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Inter de Litrão — Admin · Elenco</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Work+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --preto:#15130F; --preto-2:#201C15; --ouro:#F2AE1E; --ouro-claro:#FFD65A;
+    --osso:#F7F1E1; --osso-2:#EFE6CE; --vermelho:#D93B3B; --verde:#4C9A5B; --cinza:#8B8578;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--preto); color:var(--osso); font-family:'Work Sans', sans-serif; -webkit-font-smoothing:antialiased;}
+  .display{font-family:'Anton', sans-serif; letter-spacing:.5px; text-transform:uppercase;}
+  .wrap{max-width:640px; margin:0 auto; padding:20px 16px 60px;}
+  header{background:var(--preto-2); border-bottom:1px solid rgba(242,174,30,.25); padding:16px; text-align:center;}
+  header h1{margin:0; font-size:20px; color:var(--ouro-claro);}
+  header p{margin:4px 0 0; font-size:12px; color:var(--cinza);}
+  a{color:var(--ouro-claro);}
+
+  .card{background:var(--osso); color:var(--preto); border-radius:14px; padding:16px; margin-bottom:14px; box-shadow:0 6px 16px rgba(0,0,0,.25);}
+  label{display:block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.6px; color:#5c5646; margin:10px 0 4px;}
+  label:first-child{margin-top:0;}
+  input[type=text], input[type=email], input[type=password]{
+    width:100%; padding:9px 10px; border-radius:8px; border:1.5px solid #ddd2ae;
+    font-family:'Work Sans'; font-size:14px; background:#fff; color:var(--preto);
+  }
+  input:focus{outline:2px solid var(--ouro); border-color:var(--ouro);}
+  select{
+    width:100%; padding:9px 10px; border-radius:8px; border:1.5px solid #ddd2ae;
+    font-family:'Work Sans'; font-size:14px; background:#fff; color:var(--preto);
+  }
+
+  .btn{display:inline-flex; align-items:center; gap:6px; border:none; cursor:pointer; font-weight:700; font-size:13.5px; padding:10px 16px; border-radius:999px;}
+  .btn-ouro{background:var(--ouro); color:var(--preto);}
+  .btn-vermelho{background:var(--vermelho); color:#fff;}
+  .btn-outline{background:transparent; border:1.5px solid rgba(247,241,225,.4); color:var(--osso);}
+  .btn-sm{padding:6px 12px; font-size:12px;}
+
+  .row-actions{display:flex; gap:8px; margin-top:10px; flex-wrap:wrap;}
+  .error-msg{color:var(--vermelho); font-size:13px; margin-top:8px;}
+  .success-msg{color:var(--verde); font-size:13px; margin-top:8px;}
+  .loading{text-align:center; color:var(--cinza); font-size:13px; padding:20px;}
+
+  .player-item{
+    display:flex; align-items:center; gap:10px; background:var(--osso); color:var(--preto);
+    border-radius:12px; padding:10px 12px; margin-bottom:8px; box-shadow:0 4px 10px rgba(0,0,0,.18);
+  }
+  .player-item .info{flex:1; min-width:0;}
+  .player-item input[type=text]{margin-bottom:6px;}
+  .status-tag{font-size:10px; font-weight:700; background:var(--osso-2); border-radius:6px; padding:3px 7px; white-space:nowrap;}
+
+  .search-box{margin-bottom:14px;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1 class="display">Inter de Litrão — Admin</h1>
+  <p>Base de Atletas (elenco)</p>
+</header>
+
+<div id="loginScreen" class="wrap" style="max-width:360px; margin-top:40px;">
+  <div class="card">
+    <label for="loginEmail">E-mail</label>
+    <input type="email" id="loginEmail" placeholder="admin@time.com">
+    <label for="loginPass">Senha</label>
+    <input type="password" id="loginPass" placeholder="••••••••">
+    <div class="row-actions">
+      <button class="btn btn-ouro" style="width:100%;" onclick="doLogin()">Entrar</button>
+    </div>
+    <div id="loginError" class="error-msg"></div>
+  </div>
+  <a style="display:block; text-align:center; font-size:12.5px; color:var(--cinza);" href="index.html">← Voltar para o site</a>
+</div>
+
+<div class="wrap" id="mainScreen" style="display:none;">
+  <div class="row-actions" style="justify-content:space-between; margin-bottom:16px;">
+    <a style="font-size:12.5px;" href="admin.html">← Jogos</a>
+    <button class="btn btn-outline btn-sm" onclick="doLogout()">Sair</button>
+  </div>
+
+  <div class="card">
+    <div style="font-weight:700; margin-bottom:8px;">Adicionar atleta</div>
+    <label>Nome</label>
+    <input type="text" id="newName" placeholder="Nome do jogador">
+    <label>Posição</label>
+    <input type="text" id="newPosition" placeholder="Ex: Atacante, Zagueiro, Goleiro...">
+    <label>Status</label>
+    <select id="newStatus">
+      <option value="">—</option>
+      <option value="Mensal">Mensal</option>
+      <option value="Avulso">Avulso</option>
+      <option value="Avulso/Intercambio">Avulso/Intercâmbio</option>
+    </select>
+    <div class="row-actions">
+      <button class="btn btn-ouro" onclick="addPlayer()">Adicionar ao elenco</button>
+    </div>
+    <div id="addMsg"></div>
+  </div>
+
+  <div class="search-box">
+    <input type="text" id="searchBox" placeholder="🔍 Buscar jogador..." oninput="renderRoster()">
+  </div>
+
+  <div style="font-weight:700; margin-bottom:10px;">Elenco completo (<span id="rosterCount">0</span>)</div>
+  <div id="rosterList" class="loading">Carregando...</div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://crrjrzetvkvnjvlrvtdp.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_bFGO4xUX3YYu4RZGJjgDAg_FHZaReYe';
+
+let accessToken = null;
+try{ accessToken = sessionStorage.getItem('ilb_admin_token'); }catch(e){}
+
+let ROSTER_CACHE = [];
+
+function authHeaders(){
+  return {
+    apikey: SUPABASE_KEY,
+    Authorization: `Bearer ${accessToken || SUPABASE_KEY}`,
+    'Content-Type': 'application/json'
+  };
+}
+
+async function doLogin(){
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPass').value;
+  const errEl = document.getElementById('loginError');
+  errEl.textContent = '';
+  if(!email || !password){ errEl.textContent = 'Preencha e-mail e senha.'; return; }
+  try{
+    const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+      method: 'POST',
+      headers: { apikey: SUPABASE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+    if(!res.ok || !data.access_token){ errEl.textContent = 'E-mail ou senha incorretos.'; return; }
+    accessToken = data.access_token;
+    try{ sessionStorage.setItem('ilb_admin_token', accessToken); }catch(e){}
+    showMain();
+  }catch(e){
+    errEl.textContent = 'Erro de conexão. Tente novamente.';
+  }
+}
+
+function doLogout(){
+  accessToken = null;
+  try{ sessionStorage.removeItem('ilb_admin_token'); }catch(e){}
+  document.getElementById('mainScreen').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'block';
+}
+
+async function showMain(){
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('mainScreen').style.display = 'block';
+  await loadRoster();
+}
+
+async function loadRoster(){
+  const el = document.getElementById('rosterList');
+  el.innerHTML = '<p class="loading">Carregando...</p>';
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/roster?select=*&order=name.asc`, { headers: authHeaders() });
+    if(res.status === 401){ doLogout(); return; }
+    ROSTER_CACHE = await res.json();
+    renderRoster();
+  }catch(e){
+    el.innerHTML = '<p class="error-msg">Erro ao carregar o elenco.</p>';
+  }
+}
+
+function renderRoster(){
+  const el = document.getElementById('rosterList');
+  const term = document.getElementById('searchBox').value.trim().toLowerCase();
+  const filtered = term ? ROSTER_CACHE.filter(p => p.name.toLowerCase().includes(term)) : ROSTER_CACHE;
+  document.getElementById('rosterCount').textContent = ROSTER_CACHE.length;
+  if(filtered.length === 0){
+    el.innerHTML = '<p class="loading">Nenhum jogador encontrado.</p>';
+    return;
+  }
+  el.innerHTML = filtered.map(p => playerItemHtml(p)).join('');
+}
+
+function playerItemHtml(p){
+  return `<div class="player-item" id="player-${p.id}">
+    <div class="info">
+      <input type="text" id="pname-${p.id}" value="${(p.name||'').replace(/"/g,'&quot;')}">
+      <input type="text" id="ppos-${p.id}" value="${(p.position||'').replace(/"/g,'&quot;')}" placeholder="Posição">
+      <div class="row-actions" style="margin-top:8px;">
+        <button class="btn btn-ouro btn-sm" onclick="savePlayer(${p.id})">Salvar</button>
+        <button class="btn btn-vermelho btn-sm" onclick="deletePlayer(${p.id})">Remover</button>
+        ${p.status ? `<span class="status-tag">${p.status}</span>` : ''}
+      </div>
+      <div id="msg-${p.id}"></div>
+    </div>
+  </div>`;
+}
+
+async function addPlayer(){
+  const msgEl = document.getElementById('addMsg');
+  const name = document.getElementById('newName').value.trim();
+  if(!name){ msgEl.innerHTML = '<p class="error-msg">Digite o nome do jogador.</p>'; return; }
+  const body = {
+    name,
+    position: document.getElementById('newPosition').value.trim() || null,
+    status: document.getElementById('newStatus').value || null
+  };
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/roster`, {
+      method: 'POST',
+      headers: { ...authHeaders(), Prefer: 'return=representation' },
+      body: JSON.stringify(body)
+    });
+    if(!res.ok){ msgEl.innerHTML = '<p class="error-msg">Erro ao adicionar.</p>'; return; }
+    msgEl.innerHTML = '<p class="success-msg">Jogador adicionado ao elenco!</p>';
+    document.getElementById('newName').value = '';
+    document.getElementById('newPosition').value = '';
+    document.getElementById('newStatus').value = '';
+    loadRoster();
+  }catch(e){
+    msgEl.innerHTML = '<p class="error-msg">Erro de conexão.</p>';
+  }
+}
+
+async function savePlayer(id){
+  const msgEl = document.getElementById(`msg-${id}`);
+  const body = {
+    name: document.getElementById(`pname-${id}`).value.trim(),
+    position: document.getElementById(`ppos-${id}`).value.trim() || null
+  };
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/roster?id=eq.${id}`, {
+      method: 'PATCH',
+      headers: { ...authHeaders(), Prefer: 'return=representation' },
+      body: JSON.stringify(body)
+    });
+    if(!res.ok){ msgEl.innerHTML = '<p class="error-msg">Erro ao salvar.</p>'; return; }
+    msgEl.innerHTML = '<p class="success-msg">Salvo!</p>';
+    setTimeout(()=>{ if(msgEl) msgEl.innerHTML=''; }, 2000);
+  }catch(e){
+    msgEl.innerHTML = '<p class="error-msg">Erro de conexão.</p>';
+  }
+}
+
+async function deletePlayer(id){
+  if(!confirm('Remover este jogador do elenco? (Isso não apaga o histórico de fichas técnicas já lançadas.)')) return;
+  try{
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/roster?id=eq.${id}`, {
+      method: 'DELETE',
+      headers: authHeaders()
+    });
+    if(res.ok) loadRoster();
+    else alert('Erro ao excluir.');
+  }catch(e){
+    alert('Erro de conexão.');
+  }
+}
+
+/* ---------- INIT ---------- */
+if(accessToken){
+  showMain();
+}
+</script>
+</body>
+</html>
