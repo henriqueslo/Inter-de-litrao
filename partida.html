@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Inter de Litrão — Ficha Técnica</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Work+Sans:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --preto:#15130F; --preto-2:#201C15; --ouro:#F2AE1E; --ouro-claro:#FFD65A;
+    --osso:#F7F1E1; --osso-2:#EFE6CE; --vermelho:#D93B3B; --verde:#4C9A5B; --cinza:#8B8578;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--preto); color:var(--osso); font-family:'Work Sans', sans-serif; -webkit-font-smoothing:antialiased;}
+  .display{font-family:'Anton', sans-serif; letter-spacing:.5px; text-transform:uppercase;}
+  .mono{font-family:'Space Mono', monospace;}
+  a{color:inherit;}
+  .wrap{max-width:560px; margin:0 auto; padding:0 18px 50px;}
+
+  header.top{
+    position:sticky; top:0; z-index:50;
+    background:rgba(21,19,15,.92); backdrop-filter:blur(6px);
+    border-bottom:1px solid rgba(242,174,30,.25);
+  }
+  .top-inner{display:flex; align-items:center; gap:10px; padding:12px 18px; max-width:560px; margin:0 auto;}
+  .top-inner a.back{font-size:13px; text-decoration:none; color:var(--osso); opacity:.85; display:flex; align-items:center; gap:6px;}
+  .top-inner span.brand{margin-left:auto; font-size:13px; letter-spacing:1px; color:var(--ouro-claro);}
+
+  .summary-card{
+    margin:22px 0; border-radius:16px; overflow:hidden; box-shadow:0 10px 30px rgba(0,0,0,.35);
+  }
+  .summary-eyebrow{background:var(--ouro); color:var(--preto); font-size:11px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; padding:8px 18px;}
+  .summary-body{background:var(--osso); color:var(--preto); padding:20px;}
+  .summary-body .date{font-size:12.5px; color:#5c5646; margin-bottom:6px;}
+  .summary-body .matchup{display:flex; align-items:center; justify-content:center; gap:16px; margin:10px 0;}
+  .summary-body .team{flex:1; text-align:center; font-weight:700; font-size:15px; line-height:1.3;}
+  .summary-body .score{font-family:'Anton'; font-size:36px; white-space:nowrap;}
+  .result-tag{display:inline-block; margin-top:6px; font-size:11px; font-weight:800; border-radius:6px; padding:4px 10px;}
+  .tag-v{background:var(--verde); color:#fff;}
+  .tag-d{background:var(--vermelho); color:#fff;}
+  .tag-e{background:var(--cinza); color:#fff;}
+  .summary-footer{text-align:center; margin-top:10px;}
+  .summary-body .venue{text-align:center; font-size:12px; color:#5c5646; margin-top:10px;}
+
+  .sec-head{margin:28px 0 14px;}
+  .sec-head .tag{font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--ouro); font-weight:700;}
+  .sec-head h2{font-size:22px; margin:2px 0 0;}
+
+  .group-label{
+    font-size:11.5px; letter-spacing:1.5px; text-transform:uppercase; color:var(--cinza);
+    margin:18px 0 8px; display:flex; align-items:center; gap:8px;
+  }
+  .group-label::after{content:''; flex:1; height:1px; background:rgba(247,241,225,.15);}
+
+  .player-row{
+    display:flex; align-items:center; gap:12px; background:var(--osso); color:var(--preto);
+    border-radius:12px; padding:11px 14px; margin-bottom:8px; box-shadow:0 4px 10px rgba(0,0,0,.18);
+  }
+  .player-row .num{
+    font-family:'Anton'; font-size:16px; background:var(--preto); color:var(--ouro-claro);
+    width:30px; height:30px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .player-row .info{flex:1; min-width:0;}
+  .player-row .name{font-weight:700; font-size:14px; display:flex; align-items:center; gap:6px; flex-wrap:wrap;}
+  .player-row .pos{font-size:11px; color:#5c5646;}
+  .player-row .badges{display:flex; gap:6px; flex-wrap:wrap; margin-top:3px;}
+  .badge-chip{font-size:11px; font-weight:700; background:var(--osso-2); border-radius:6px; padding:2px 7px; white-space:nowrap;}
+  .badge-mvp{background:var(--ouro); color:var(--preto);}
+
+  .loading, .empty-msg{text-align:center; color:var(--cinza); font-size:13.5px; padding:30px 10px;}
+  .error-msg{text-align:center; color:var(--vermelho); font-size:13.5px; padding:30px 10px;}
+
+  footer{text-align:center; padding:30px 0 20px; color:var(--cinza); font-size:12px;}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-inner">
+    <a class="back" href="index.html#resultados">← Voltar</a>
+    <span class="brand display">Inter de Litrão</span>
+  </div>
+</header>
+
+<div class="wrap">
+  <div id="summaryArea"><p class="loading">Carregando ficha técnica...</p></div>
+
+  <div id="lineupArea"></div>
+</div>
+
+<footer>🟡⚫ Jogar como bebemos ⚫🟡</footer>
+
+<script>
+const SUPABASE_URL = 'https://crrjrzetvkvnjvlrvtdp.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_bFGO4xUX3YYu4RZGJjgDAg_FHZaReYe';
+
+function headers(){
+  return { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` };
+}
+
+function resultTagHtml(home, away){
+  if(home === null || away === null) return '';
+  if(home > away) return '<span class="result-tag tag-v">Vitória</span>';
+  if(home < away) return '<span class="result-tag tag-d">Derrota</span>';
+  return '<span class="result-tag tag-e">Empate</span>';
+}
+
+function fmtDate(dateStr){
+  const [y,m,d] = dateStr.split('-').map(Number);
+  const dt = new Date(y, m-1, d);
+  const dias = ['domingo','segunda-feira','terça-feira','quarta-feira','quinta-feira','sexta-feira','sábado'];
+  const meses = ['janeiro','fevereiro','março','abril','maio','junho','julho','agosto','setembro','outubro','novembro','dezembro'];
+  return `${dt.getDate()} de ${meses[dt.getMonth()]} de ${dt.getFullYear()} (${dias[dt.getDay()]})`;
+}
+
+function playerRowHtml(p){
+  const badges = [];
+  if(p.gols > 0) badges.push(`<span class="badge-chip">⚽ ${p.gols}</span>`);
+  if(p.assistencias > 0) badges.push(`<span class="badge-chip">🅰️ ${p.assistencias}</span>`);
+  if(p.amarelo > 0) badges.push(`<span class="badge-chip">🟨 ${p.amarelo}</span>`);
+  if(p.vermelho > 0) badges.push(`<span class="badge-chip">🟥 ${p.vermelho}</span>`);
+  return `<div class="player-row">
+    <div class="num">${p.shirt_number ?? '-'}</div>
+    <div class="info">
+      <div class="name">${p.player_name} ${p.mvp ? '<span class="badge-chip badge-mvp">★ MVP</span>' : ''}</div>
+      <div class="pos">${p.position || ''}</div>
+      ${badges.length ? `<div class="badges">${badges.join('')}</div>` : ''}
+    </div>
+  </div>`;
+}
+
+async function init(){
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get('id');
+  const summaryEl = document.getElementById('summaryArea');
+  const lineupEl = document.getElementById('lineupArea');
+
+  if(!id){
+    summaryEl.innerHTML = '<p class="error-msg">Jogo não encontrado — falta o identificador na URL.</p>';
+    return;
+  }
+
+  try{
+    const matchRes = await fetch(`${SUPABASE_URL}/rest/v1/matches?id=eq.${id}&select=*`, { headers: headers() });
+    const matches = await matchRes.json();
+    if(!matches.length){
+      summaryEl.innerHTML = '<p class="error-msg">Esse jogo não foi encontrado.</p>';
+      return;
+    }
+    const m = matches[0];
+
+    summaryEl.innerHTML = `
+      <div class="summary-card">
+        <div class="summary-eyebrow">Ficha técnica</div>
+        <div class="summary-body">
+          <div class="date">${fmtDate(m.date)}</div>
+          <div class="matchup">
+            <div class="team">Inter de Litrão</div>
+            <div class="score mono">${m.home_score ?? '–'} x ${m.away_score ?? '–'}</div>
+            <div class="team">${m.opponent || 'Adversário'}</div>
+          </div>
+          <div class="summary-footer">${resultTagHtml(m.home_score, m.away_score)}</div>
+          <div class="venue">A.A. Anhangüera · Rua dos Italianos, 1261 – Bom Retiro</div>
+        </div>
+      </div>
+    `;
+
+    const lineupRes = await fetch(`${SUPABASE_URL}/rest/v1/lineup_entries?match_id=eq.${id}&select=*&order=shirt_number.asc`, { headers: headers() });
+    const lineup = await lineupRes.json();
+
+    if(!lineup.length){
+      lineupEl.innerHTML = '<p class="empty-msg">A escalação desse jogo ainda não foi registrada.</p>';
+      return;
+    }
+
+    const isReserve = p => /reserva|sub/i.test(p.position || '');
+    const titulares = lineup.filter(p => !isReserve(p));
+    const reservas = lineup.filter(p => isReserve(p));
+
+    let html = '';
+    if(titulares.length){
+      html += '<div class="group-label">Titulares</div>';
+      html += titulares.map(playerRowHtml).join('');
+    }
+    if(reservas.length){
+      html += '<div class="group-label">Banco / Reservas</div>';
+      html += reservas.map(playerRowHtml).join('');
+    }
+    lineupEl.innerHTML = html;
+
+  }catch(e){
+    summaryEl.innerHTML = '<p class="error-msg">Não foi possível carregar a ficha técnica agora. Tente novamente em instantes.</p>';
+  }
+}
+
+init();
+</script>
+</body>
+</html>
