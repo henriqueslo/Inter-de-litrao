@@ -73,6 +73,18 @@
   .error-msg{text-align:center; color:var(--vermelho); font-size:13.5px; padding:30px 10px;}
 
   footer{text-align:center; padding:30px 0 20px; color:var(--cinza); font-size:12px;}
+
+  /* ---------- NAVEGAÇÃO ENTRE JOGOS ---------- */
+  .match-nav{display:flex; gap:10px; margin-top:26px;}
+  .nav-btn{
+    flex:1; display:flex; flex-direction:column; text-decoration:none; color:var(--osso);
+    background:var(--preto-2); border:1px solid rgba(242,174,30,.3); border-radius:12px;
+    padding:12px 14px; font-size:12.5px;
+  }
+  .nav-btn.next{text-align:right;}
+  .nav-btn .nav-label{font-size:10.5px; text-transform:uppercase; letter-spacing:1px; color:var(--cinza); margin-bottom:3px;}
+  .nav-btn .nav-opp{font-weight:700; font-size:13.5px;}
+  .nav-btn.disabled{opacity:.3; pointer-events:none;}
 </style>
 </head>
 <body>
@@ -88,6 +100,8 @@
   <div id="summaryArea"><p class="loading">Carregando ficha técnica...</p></div>
 
   <div id="lineupArea"></div>
+
+  <div id="matchNav"></div>
 </div>
 
 <footer>🟡⚫ Jogar como bebemos ⚫🟡</footer>
@@ -131,11 +145,27 @@ function playerRowHtml(p){
   </div>`;
 }
 
+function navBtnHtml(match, direction){
+  if(!match){
+    return `<div class="nav-btn ${direction} disabled">
+      <span class="nav-label">${direction === 'prev' ? '← Anterior' : 'Próximo →'}</span>
+      <span class="nav-opp">—</span>
+    </div>`;
+  }
+  const dt = new Date(match.date + 'T12:00:00');
+  const dateLabel = dt.toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'});
+  return `<a class="nav-btn ${direction}" href="partida.html?id=${match.id}">
+    <span class="nav-label">${direction === 'prev' ? '← Jogo anterior' : 'Próximo jogo →'}</span>
+    <span class="nav-opp">${dateLabel} · ${match.opponent || 'Adversário'}</span>
+  </a>`;
+}
+
 async function init(){
   const params = new URLSearchParams(window.location.search);
   const id = params.get('id');
   const summaryEl = document.getElementById('summaryArea');
   const lineupEl = document.getElementById('lineupArea');
+  const navEl = document.getElementById('matchNav');
 
   if(!id){
     summaryEl.innerHTML = '<p class="error-msg">Jogo não encontrado — falta o identificador na URL.</p>';
@@ -143,7 +173,10 @@ async function init(){
   }
 
   try{
-    const matchRes = await fetch(`${SUPABASE_URL}/rest/v1/matches?id=eq.${id}&select=*`, { headers: headers() });
+    const [matchRes, finishedRes] = await Promise.all([
+      fetch(`${SUPABASE_URL}/rest/v1/matches?id=eq.${id}&select=*`, { headers: headers() }),
+      fetch(`${SUPABASE_URL}/rest/v1/matches?home_score=not.is.null&select=id,date,opponent&order=date.asc`, { headers: headers() })
+    ]);
     const matches = await matchRes.json();
     if(!matches.length){
       summaryEl.innerHTML = '<p class="error-msg">Esse jogo não foi encontrado.</p>';
@@ -167,6 +200,13 @@ async function init(){
       </div>
     `;
 
+    // navegação entre jogos (só entre os que já têm placar/ficha)
+    const finished = await finishedRes.json();
+    const idx = finished.findIndex(x => String(x.id) === String(id));
+    const prevMatch = idx > 0 ? finished[idx - 1] : null;
+    const nextMatch = (idx >= 0 && idx < finished.length - 1) ? finished[idx + 1] : null;
+    navEl.innerHTML = `<div class="match-nav">${navBtnHtml(prevMatch,'prev')}${navBtnHtml(nextMatch,'next')}</div>`;
+
     const lineupRes = await fetch(`${SUPABASE_URL}/rest/v1/lineup_entries?match_id=eq.${id}&select=*&order=shirt_number.asc`, { headers: headers() });
     const lineup = await lineupRes.json();
 
@@ -178,6 +218,7 @@ async function init(){
     const isReserve = p => /reserva|sub/i.test(p.position || '');
     const titulares = lineup.filter(p => !isReserve(p));
     const reservas = lineup.filter(p => isReserve(p));
+
 
     let html = '';
     if(titulares.length){
